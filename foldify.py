@@ -120,3 +120,14 @@ class FileHandler:
 
         return folder_info
         
+		
+class FileManager:
+    def __init__(self,path,file_handler=FileHandler):
+        self.path = path
+        self.handler = file_handler
+
+    
+
+class FolderNotFound(Exception):
+    def __init__(self,*args):
+        super().__init__(*args)
