@@ -99,27 +99,35 @@ class FileHandler:
     def get_largest_folder(self):
         return self._folders_by_size[max(self._folders_by_size.keys())]
 
+    def __get_indent(self,level):
+        return ' '*4*(level)
+
     def show_folder_childs(self,*args,**kwargs):
-        if folder:
-              abs_path = self.get_file_path(folder)
-              level = root.replace(abs_path, '').count(os.sep)
-		      indent = ' ' * 4 * (level)
-		      print('~{}{}/'.format(indent, os.path.basename(root)))
-              subindent = ' ' * 4 * (level + 1)
-              if show_files:
-                for f in files:
-                    print('|{}{}'.format(subindent, f))
-            return None
-        elif filepath:
-            abs_path = self.get_file_path(folder)
-            level = root.replace(abs_path, '').count(os.sep)
-		    indent = ' ' * 4 * (level)
-		    print('~{}{}/'.format(indent, os.path.basename(root)))
-            subindent = ' ' * 4 * (level + 1)
-            if show_files:
-                for f in files:
-                    print('|{}{}'.format(subindent, f))
-            return None
+        folder = kwargs.get('folder')
+        folderpath = kwargs.get('path')
+        show_files = kwargs.get('show_files')
+        if folder :
+            abs_path = self.get_folder_path(folder)
+            for root,dirs,files in os.walk(abs_path):
+                level = root.replace(abs_path, '').count(os.sep)
+                print('~{}{}/'.format(self.__get_indent(level), os.path.basename(root)))
+                subindent = ' ' * 4 * (level + 1)
+                if show_files:
+                    for f in files:
+                        print('|{}{}'.format(subindent, f))
+
+        elif folderpath:
+            for roots,dirs,files in os.walk(folderpath):
+                level = root.replace(folderpath).count(os.sep)
+                print('~{}{}/'.format(self.__get_indent(level), os.path.basename(root)))
+                subindent = ' ' * 4 * (level + 1)
+                if show_files:
+                    for f in files:
+                        print('|{}{}'.format(subindent, f))
+
+        else:
+            raise ValueError('no valid variables')
+
          
        
         
