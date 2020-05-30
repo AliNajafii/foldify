@@ -47,6 +47,12 @@ class FileHandler:
                     folder: os.path.join(dirpath,folder)
                 })
 
+    def get_files_number(self):
+        return len(self.files)
+
+    def get_folder_number(self):
+        return len(self.folders)
+
 
     def get_folder_size(self,folder):
         return os.path.getsize(self.get_folder_path(folder))
@@ -133,12 +139,50 @@ class FileHandler:
         
 		
 class FileManager:
-    def __init__(self,path,file_handler=FileHandler):
+    def __init__(self,path,file_handler=FileHandler,*args,**kwargs):
         self.path = path
-        self.handler = file_handler
+        self.handler = file_handler(self.path)
+
+    def get_info(self,show_folder_childs=False,show_folder_childs_file=False):
+
+        self.handler.setup()
+        print(f"""
+                total files : {self.handler.get_files_number()}
+                total folders : {self.handler.get_folder_number()}
+                largest file : {self.handler.get_file_path(self.handler.get_largest_file())} --> {self.show_size(self.handler.get_file_size(self.handler.get_largest_file()))}
+                largest folder : {self.handler.get_folder_path(self.handler.get_largest_folder())} --> {self.show_size(self.handler.get_folder_size(self.handler.get_largest_folder()))}
+        """)
+
+        if show_folder_childs:
+            if show_folder_childs_file:
+                self.handler.show_folder_childs(path=self.path,show_files=True)
+            else:
+                self.handler.show_folder_childs(path=self.path)
+
+    def show_size(self,size):
+        """
+        this method show size in byte, kb,mb or gb and return string
+        """
+        if size<1000 :
+            return f"{size} Bytes"
+        elif 1000<= size <= 999999 :
+            return f'{size/1000} KB'
+        elif 10**6 <= size < 999999999:
+            return f'{size/10**6} MB'
+
+        else :
+            return f'{size/10**9} GB'
+
+
+
+
 
     
 
 class FolderNotFound(Exception):
     def __init__(self,*args):
         super().__init__(*args)
+
+
+fm = FileManager(path='E:\\Computer engineering\\Projects\\RealProjects')
+fm.get_info()
