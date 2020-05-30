@@ -99,26 +99,29 @@ class FileHandler:
     def get_largest_folder(self):
         return self._folders_by_size[max(self._folders_by_size.keys())]
 
-    def get_folder_childs(self,folder):
-          
-        folder_path = self.get_folder_path(folder)
-        folder_info = {
-            'folders':[]
-        }
-        for dirpath,folders,files in os.walk(folder_path):
-            # if not folders:
-            #     return folder_info.update({
-            #         folder:{
-            #             'files':files
-            #         }
-            #     })
-
-            for fol in folders:
-                folder_info['folders'].append(fol)
-                
-
-
-        return folder_info
+    def show_folder_childs(self,*args,**kwargs):
+        if folder:
+              abs_path = self.get_file_path(folder)
+              level = root.replace(abs_path, '').count(os.sep)
+		      indent = ' ' * 4 * (level)
+		      print('~{}{}/'.format(indent, os.path.basename(root)))
+              subindent = ' ' * 4 * (level + 1)
+              if show_files:
+                for f in files:
+                    print('|{}{}'.format(subindent, f))
+            return None
+        elif filepath:
+            abs_path = self.get_file_path(folder)
+            level = root.replace(abs_path, '').count(os.sep)
+		    indent = ' ' * 4 * (level)
+		    print('~{}{}/'.format(indent, os.path.basename(root)))
+            subindent = ' ' * 4 * (level + 1)
+            if show_files:
+                for f in files:
+                    print('|{}{}'.format(subindent, f))
+            return None
+         
+       
         
 		
 class FileManager:
