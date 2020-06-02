@@ -123,8 +123,8 @@ class FileHandler:
                         print('|{}{}'.format(subindent, f))
 
         elif folderpath:
-            for roots,dirs,files in os.walk(folderpath):
-                level = root.replace(folderpath).count(os.sep)
+            for root,dirs,files in os.walk(folderpath):
+                level = root.replace(folderpath,'').count(os.sep)
                 print('~{}{}/'.format(self.__get_indent(level), os.path.basename(root)))
                 subindent = ' ' * 4 * (level + 1)
                 if show_files:
@@ -146,17 +146,20 @@ class FileManager:
     def get_info(self,show_folder_childs=False,show_folder_childs_file=False):
 
         self.handler.setup()
-        print(f"""
+        info = f"""
                 total files : {self.handler.get_files_number()}
                 total folders : {self.handler.get_folder_number()}
                 largest file : {self.handler.get_file_path(self.handler.get_largest_file())} --> {self.show_size(self.handler.get_file_size(self.handler.get_largest_file()))}
                 largest folder : {self.handler.get_folder_path(self.handler.get_largest_folder())} --> {self.show_size(self.handler.get_folder_size(self.handler.get_largest_folder()))}
-        """)
+        """
+        print(info)
 
         if show_folder_childs:
             if show_folder_childs_file:
+                print('files and folders :')
                 self.handler.show_folder_childs(path=self.path,show_files=True)
             else:
+                print('folders:')
                 self.handler.show_folder_childs(path=self.path)
 
     def show_size(self,size):
@@ -183,6 +186,6 @@ class FolderNotFound(Exception):
     def __init__(self,*args):
         super().__init__(*args)
 
-
-fm = FileManager(path='E:\\Computer engineering\\Projects\\RealProjects')
+d = input('Please enter a directory:\t')
+fm = FileManager(path=d)
 fm.get_info()
