@@ -1,5 +1,6 @@
 import os
 import pathlib
+import copy
 
 class FileHandler:
 
@@ -17,7 +18,7 @@ class FileHandler:
                             #...
                   #...      #}
                 #}
-        self._reper_dict = {} 
+         
         self._folders_by_size = {} # {size:folder}
         self._files_by_size = {} #{size:file}
 
@@ -25,6 +26,7 @@ class FileHandler:
         return f'< class {self.__class__.__name__}  {self.path} >'
 
     def setup(self):
+        
         """
         this method runs sizing and representation and instanciating properties.
         """
@@ -69,6 +71,7 @@ class FileHandler:
 
 
     def get_file_path(self,filename):
+        
 
         try:
             file_dir = self.files_dir[filename]
@@ -78,7 +81,6 @@ class FileHandler:
 
     def __set_files_by_size(self):
         for file in self.files:
-            file_path = self.get_file_path(file)
             self._files_by_size.update({
                 self.get_file_size(file):file
                 })
@@ -176,16 +178,160 @@ class FileManager:
         else :
             return f'{size/10**9} GB'
 
+class Handler(FileHandler):
+    
+    """
+    this is File Handler class wich has memory performance.
+    using iter tools and function to use less memory for larg directories
+    note: it migth less speed!
+    """
+
+    def __init__(self,path,*args,**kwargs):
+        super().__init__(path,*args,**kwargs)
+        
+    
+    def setup(self):
+        super().setup()
+        self.set_files_performed(self.files) 
+        self.set_folders_perforemd(self.folders) 
+        self.set_folders_by_size_perforemd(self._folders_by_size)
+        self.set_files_by_size_performed(self._files_by_size)
+        self.set_files_dir_performed(self.files_dir)
+        self.set_folders_dir_performed(self.folders_dir)
+        
+    def bluh(self):
+        pass
+    def set_files_performed(self,files):
+        """
+        this method make list of self.files to iter obj
+        """
+        self.files = iter(files)
+
+        
+
+    def set_folders_perforemd(self,folders):
+        """
+        this method make list of self.folders to iter obj
+        """
+        self.folders = iter(folders)
+
+    def set_folders_by_size_perforemd(self,folder_dic):
+        """
+        this method make list of self.folders_by_size to zip obj
+        exp : next(self.folders_by_size) --> (folder_name,size)
+        """
+
+        self._folders_by_size = zip(folder_dic.keys(),folder_dic.values())
+
+    def set_files_by_size_performed(self,files_dic):
+        """
+        this method make list of self._files_by_size to zip obj
+        exp : next(self._files_by_size) --> (file_name,size)
+        """
+
+        self._files_by_size = zip(files_dic.keys(),files_dic.values())
+
+    def set_files_dir_performed(self,files_dic):
+        """
+        this method make list of self.files_dir to zip obj
+        exp : next(self.files_dir) --> (file_name,path)
+        """
+        self.files_dir = zip(files_dic.keys(),files_dic.values())
 
 
+    def set_folders_dir_performed(self,folders_dic):
+        """
+        this method make list of self.folders_dir to zip obj
+        exp : next(self.folder_dir) --> (folder_name,path)
+        """
+        self.folders_dir = zip(folders_dic.keys(),folders_dic.values())
 
+    def get_files(self):
+        return copy.deepcopy(self.files)
+    
+    def get_folders(self):
+        return copy.deepcopy(self.folders)
+
+    def get_files_by_size(self):
+        return copy.deepcopy(self._files_by_size)
+    
+    def get_folder_by_size(self):
+        return copy.deepcopy(self._folders_by_size)
+
+    def get_files_dir(self):
+        return copy.deepcopy(self.files_dir)
+    
+    def get_folders_dir(self):
+        return copy.deepcopy(self.folders_dir)
+
+    def get_file_path(self,file):
+        dirs = self.get_files_dir()
+        if isinstance(dirs,dict):
+            return super().get_file_path(file)
+        while True :
+            try:
+                file_path = next(dirs)
+            except StopIteration:
+                raise FileNotFoundError(f'{file} not found in {self.path} sub directories')
+            if file_path[0] == file: 
+                return file_path[1] # returns the path
+    
+    def get_folder_path(self,folder):
+        dirs = self.get_folders_dir()
+        if isinstance(dirs,dict):
+            return super().get_folder_path(folder)
+        while True:
+            try:
+                folder_path = next(dirs)
+            except StopIteration :
+                raise FolderNotFound(f'{folder} not found in {self.path} sub directories')
+            if folder_path[0] == folder:
+                return folder_path[1]
+
+    def get_files_number(self):
+        files = self.get_files()
+        counter = 0
+        while True:
+            try:
+                f = next(files)
+                counter+=1
+                del(f)
+            except StopIteration:
+                return counter
+
+    def get_folders_number(self):
+        folders = self.get_folders()
+        counter = 0 
+        while True:
+            try:
+                fol = next(folders)
+                counter+=1
+                del(fol)
+            except StopIteration:
+                return counter
+
+    def get_largest_file(self):
+        size_file = self.get_files_by_size()
+        max_size = 0
+        while True:
+            try:
+                s = next(size_file)[0] # get size from tuple
+            except StopIteration:
+                return max_size
+
+            if s > max_size:
+                max_size=s
 
     
-
 class FolderNotFound(Exception):
     def __init__(self,*args):
         super().__init__(*args)
 
-d = input('Please enter a directory:\t')
-fm = FileManager(path=d)
-fm.get_info()
+# d = input('Please enter a directory:\t')
+# # fm = FileManager(path=d)
+# # fm.get_info()
+# h = Handler(d)
+# h.setup()
+# print('folder number :',h.get_folders_number())
+# print('file number :',h.get_files_number())
+
