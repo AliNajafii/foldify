@@ -1,6 +1,17 @@
 import os
 import pathlib
 import copy
+import functools
+import itertools
+
+def debug(func):
+    @functools.wraps(func)
+    def debug_wrapper(*args,**kwargs):
+        print(f'{func.__name__} started', end="\r\n", flush=True)
+        val = func(*args,**kwargs)
+        print(f'{func.__name__} ended', end="\r\n", flush=True)        
+        return val
+    return debug_wrapper
 
 class FileHandler:
 
@@ -52,7 +63,7 @@ class FileHandler:
     def get_files_number(self):
         return len(self.files)
 
-    def get_folder_number(self):
+    def get_folders_number(self):
         return len(self.folders)
 
 
@@ -150,7 +161,7 @@ class FileManager:
         self.handler.setup()
         info = f"""
                 total files : {self.handler.get_files_number()}
-                total folders : {self.handler.get_folder_number()}
+                total folders : {self.handler.get_folders_number()}
                 largest file : {self.handler.get_file_path(self.handler.get_largest_file())} --> {self.show_size(self.handler.get_file_size(self.handler.get_largest_file()))}
                 largest folder : {self.handler.get_folder_path(self.handler.get_largest_folder())} --> {self.show_size(self.handler.get_folder_size(self.handler.get_largest_folder()))}
         """
@@ -189,7 +200,7 @@ class Handler(FileHandler):
     def __init__(self,path,*args,**kwargs):
         super().__init__(path,*args,**kwargs)
         
-    
+    @debug
     def setup(self):
         super().setup()
         self.set_files_performed(self.files) 
@@ -199,52 +210,52 @@ class Handler(FileHandler):
         self.set_files_dir_performed(self.files_dir)
         self.set_folders_dir_performed(self.folders_dir)
         
-    def bluh(self):
-        pass
+    
     def set_files_performed(self,files):
+         
         """
         this method make list of self.files to iter obj
         """
         self.files = iter(files)
 
         
-
+    
     def set_folders_perforemd(self,folders):
         """
         this method make list of self.folders to iter obj
         """
         self.folders = iter(folders)
-
+    
     def set_folders_by_size_perforemd(self,folder_dic):
         """
         this method make list of self.folders_by_size to zip obj
         exp : next(self.folders_by_size) --> (folder_name,size)
         """
 
-        self._folders_by_size = zip(folder_dic.keys(),folder_dic.values())
-
+        self._folders_by_size = itertools.zip_longest(folder_dic.keys(),folder_dic.values())
+    
     def set_files_by_size_performed(self,files_dic):
         """
         this method make list of self._files_by_size to zip obj
         exp : next(self._files_by_size) --> (file_name,size)
         """
 
-        self._files_by_size = zip(files_dic.keys(),files_dic.values())
-
+        self._files_by_size = itertools.zip_longest(files_dic.keys(),files_dic.values())
+    
     def set_files_dir_performed(self,files_dic):
         """
         this method make list of self.files_dir to zip obj
         exp : next(self.files_dir) --> (file_name,path)
         """
-        self.files_dir = zip(files_dic.keys(),files_dic.values())
+        self.files_dir = itertools.zip_longest(files_dic.keys(),files_dic.values())
 
-
+    
     def set_folders_dir_performed(self,folders_dic):
         """
         this method make list of self.folders_dir to zip obj
         exp : next(self.folder_dir) --> (folder_name,path)
         """
-        self.folders_dir = zip(folders_dic.keys(),folders_dic.values())
+        self.folders_dir = itertools.zip_longest(folders_dic.keys(),folders_dic.values())
 
     def get_files(self):
         return copy.deepcopy(self.files)
@@ -255,7 +266,7 @@ class Handler(FileHandler):
     def get_files_by_size(self):
         return copy.deepcopy(self._files_by_size)
     
-    def get_folder_by_size(self):
+    def get_folders_by_size(self):
         return copy.deepcopy(self._folders_by_size)
 
     def get_files_dir(self):
@@ -268,70 +279,69 @@ class Handler(FileHandler):
         dirs = self.get_files_dir()
         if isinstance(dirs,dict):
             return super().get_file_path(file)
-        while True :
-            try:
-                file_path = next(dirs)
-            except StopIteration:
-                raise FileNotFoundError(f'{file} not found in {self.path} sub directories')
-            if file_path[0] == file: 
-                return file_path[1] # returns the path
+        result = list(itertools.filterfalse(lambda x: x[0] != file,dirs)) # filtering filename ,file path tuple
+        if result:
+            return result[0][1]
+        return FileNotFoundError(f'{file} not found in {self.path} sub directories')
     
     def get_folder_path(self,folder):
         dirs = self.get_folders_dir()
         if isinstance(dirs,dict):
             return super().get_folder_path(folder)
-        while True:
-            try:
-                folder_path = next(dirs)
-            except StopIteration :
-                raise FolderNotFound(f'{folder} not found in {self.path} sub directories')
-            if folder_path[0] == folder:
-                return folder_path[1]
+        result = list(itertools.filterfalse(lambda x:x[0] != folder,dirs))
+        if result:
+            return result[0][1]
+        
+        return FolderNotFound(f'{folder} not found in {self.path} sub directories')
 
     def get_files_number(self):
         files = self.get_files()
-        counter = 0
-        while True:
-            try:
-                f = next(files)
-                counter+=1
-                del(f)
-            except StopIteration:
-                return counter
+        return len(list(itertools.filterfalse(lambda x: x==None,files)))
 
     def get_folders_number(self):
         folders = self.get_folders()
-        counter = 0 
-        while True:
-            try:
-                fol = next(folders)
-                counter+=1
-                del(fol)
-            except StopIteration:
-                return counter
+        return len(list(itertools.filterfalse(lambda x: x==None,folders)))
 
     def get_largest_file(self):
         size_file = self.get_files_by_size()
         max_size = 0
+        largest_file = ''
         while True:
             try:
-                s = next(size_file)[0] # get size from tuple
+                s = next(size_file) # get size from tuple
             except StopIteration:
-                return max_size
+                return largest_file
 
-            if s > max_size:
-                max_size=s
+            if s[0] > max_size:
+                max_size=s[0]
+                largest_file = s[1]
+    
+    def get_largest_folder(self):
+        size_folder = self.get_folders_by_size()
+        print(type(size_folder))
+        max_size = 0
+        largest_folder = ''
+        while True:
+            try:
+                s_f = next(size_folder)
+            except StopIteration:
+                return largest_folder
+
+            if s_f[0] > max_size:
+                max_size = s_f[0]
+                largest_folder = s_f[1]
 
     
 class FolderNotFound(Exception):
     def __init__(self,*args):
         super().__init__(*args)
 
-# d = input('Please enter a directory:\t')
+d = input('Please enter a directory:\t')
 # # fm = FileManager(path=d)
 # # fm.get_info()
-# h = Handler(d)
-# h.setup()
+h = Handler(d)
+h.setup()
+print(h.get_largest_folder())
 # print('folder number :',h.get_folders_number())
 # print('file number :',h.get_files_number())
 
