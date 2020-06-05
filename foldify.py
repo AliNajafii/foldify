@@ -229,7 +229,7 @@ class Handler(FileHandler):
     def set_folders_by_size_perforemd(self,folder_dic):
         """
         this method make list of self.folders_by_size to zip obj
-        exp : next(self.folders_by_size) --> (folder_name,size)
+        exp : next(self.folders_by_size) --> (size,foldername)
         """
 
         self._folders_by_size = itertools.zip_longest(folder_dic.keys(),folder_dic.values())
@@ -237,7 +237,7 @@ class Handler(FileHandler):
     def set_files_by_size_performed(self,files_dic):
         """
         this method make list of self._files_by_size to zip obj
-        exp : next(self._files_by_size) --> (file_name,size)
+        exp : next(self._files_by_size) --> (size,filename)
         """
 
         self._files_by_size = itertools.zip_longest(files_dic.keys(),files_dic.values())
@@ -256,6 +256,16 @@ class Handler(FileHandler):
         exp : next(self.folder_dir) --> (folder_name,path)
         """
         self.folders_dir = itertools.zip_longest(folders_dic.keys(),folders_dic.values())
+
+    def __set_path_size(self):
+        files_size = self.get_files_by_size()
+        self.path_size = sum(
+            list(itertools.starmap(lambda x,y : x,files_size))
+        )
+
+    def get_full_size(self):
+        self.__set_path_size()
+        return self.path_size
 
     def get_files(self):
         return copy.deepcopy(self.files)
@@ -341,7 +351,4 @@ d = input('Please enter a directory:\t')
 # # fm.get_info()
 h = Handler(d)
 h.setup()
-print(h.get_largest_folder())
-# print('folder number :',h.get_folders_number())
-# print('file number :',h.get_files_number())
-
+print(h.get_full_size())
