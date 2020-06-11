@@ -80,6 +80,8 @@ class FileHandler:
         file_dir = self.get_file_path(filename)
         return os.path.getsize(file_dir)
 
+    def get_files_by_size(self):
+        return copy.deepcopy(self._files_by_size)
 
     def get_file_path(self,filename):
         
@@ -146,6 +148,17 @@ class FileHandler:
 
         else:
             raise ValueError('no valid variables')
+
+    def get_most_large_files(self,files_number):
+        size_file_dict = self.get_files_by_size()
+        size_list = list(size_file_dict.keys())[:files_number]
+        size_list.sort()
+        size_list.reverse()
+        files = []
+        for size in size_list:
+            files.append((size_file_dict[size],size))
+        return files
+
 
          
        
@@ -346,9 +359,9 @@ class FolderNotFound(Exception):
     def __init__(self,*args):
         super().__init__(*args)
 
-d = input('Please enter a directory:\t')
-# # fm = FileManager(path=d)
-# # fm.get_info()
-h = Handler(d)
-h.setup()
-print(h.get_full_size())
+# d = input('Please enter a directory:\t')
+# # # fm = FileManager(path=d)
+# # # fm.get_info()
+# h = Handler(d)
+# h.setup()
+# print(h.get_full_size())
